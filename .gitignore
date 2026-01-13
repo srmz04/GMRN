@@ -38,3 +38,9 @@ data/processed/*
 # IDE
 .vscode/
 .idea/
+
+# Logs
+logs/
+
+# Documentos internos
+PROTOCOLO IMC SEED-SSD 29.5.25.pdf
