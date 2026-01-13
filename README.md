@@ -1,34 +1,93 @@
-# GMRN: Generador Masivo de Reportes Nutricionales
+# GMRN - Generador Masivo de Reportes Nutricionales
 
-## 📋 Contexto del Proyecto
-Iniciativa tecnológica conjunta para la **Secretaría de Salud (SSD)** y la **Secretaría de Educación (SEED)** del Estado de Durango.
-Este sistema fue diseñado para procesar, analizar y clasificar masivamente los datos de somatometría de aproximadamente **63,000 menores** (de 6 a 12 años) del subsistema federal, recolectados por profesores de educación física durante 2 años consecutivos.
+Sistema para generar reportes individuales de IMC para menores escolares. Proyecto colaborativo entre la Subdirección de Educación Física A (SEED) y el Departamento de Enfermedades Transmisibles (SSD) del estado de Durango.
 
-## 🚀 Evolución y Justificación Técnica
-Este repositorio consolida la evolución de herramientas desarrolladas y probadas en campo ("in-house") antes de su versionado centralizado.
+## Qué hace
 
-*   **Origen ("Fase Artesanal"):** El proyecto inició como una serie de scripts locales (Python/Colab) ejecutados manualmente para validar la metodología de cálculo de Z-Scores de la OMS en muestras piloto.
-*   **Consolidación:** Tras validar la utilidad clínica y logística, el código fue refactorizado en un motor de procesamiento por lotes (*batch processing*) robusto, capaz de manejar la carga estatal completa.
-*   **Estado Actual (v1.0):** El código fuente importado representa una versión estable, optimizada para multiprocesamiento y lista para producción.
+Procesa datos de somatometría de aprox. 63,000 menores (6-12 años) del subsistema federal y genera PDFs individuales de 3 páginas:
 
-## ⚙️ Funcionalidad Principal
-El sistema transforma datos crudos (Excel/CSV de zonas escolares) en expedientes clínicos individuales estandarizados.
+1. Gráfica de crecimiento OMS (IMC vs edad)
+2. Cartilla de salud escolar con datos del alumno
+3. Hoja de referencia para derivación a centros de salud
 
-### Componentes del Reporte (3 Páginas por Menor)
-1.  **Gráfica de Crecimiento OMS:** Visualización precisa del IMC vs. Edad sobre las curvas de referencia de la OMS (2007). Identifica visualmente Desnutrición, Sobrepeso u Obesidad.
-2.  **Cartilla de Salud Escolar:** Formato institucional con datos demográficos y tabla de control de citas médicas.
-3.  **Hoja de Referencia:** Documento oficial pre-llenado para facilitar la canalización del menor a su Centro de Salud correspondiente.
+El sistema permite a profesores de educación física y personal de salud identificar rápidamente casos que requieren seguimiento (desnutrición, sobrepeso, obesidad).
 
-## 🛠️ Stack Tecnológico
-*   **Core:** Python 3.8+
-*   **Análisis de Datos:** Pandas (Vectorización de cálculos de edad y percentiles).
-*   **Visualización:** Matplotlib (Backend 'Agg' para generación masiva no interactiva).
-*   **Performance:** Multiprocessing (Paralelización a nivel de CPU).
+## Instalación
 
-## 📊 Métricas de Rendimiento
-*   **Velocidad:** ~1.05 segundos por reporte completo (3 páginas).
-*   **Escalabilidad:** Probado con lotes de miles de registros sin fugas de memoria.
-*   **Trazabilidad:** Logs en formato JSONL para auditoría de procesos.
+```bash
+git clone [repo]
+cd GMRN
+python -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
----
-**Desarrollado para:** Servicios de Salud de Durango & Secretaría de Educación del Estado de Durango.
+## Uso básico
+
+### 1. Procesar datos crudos
+
+```bash
+python src/process_data.py --input data/raw/IMC\ FEDERAL.xlsx --output-dir data/processed
+```
+
+Esto filtra los registros (percentiles < 15 o > 85.1) y los divide por zona/escuela.
+
+### 2. Generar reportes PDF
+
+```bash
+python src/nutritional_app.py
+```
+
+Abre una interfaz gráfica donde puedes:
+
+- Seleccionar archivos individuales o carpetas completas
+- Activar/desactivar procesamiento paralelo
+- Ver progreso en tiempo real
+
+Para modo benchmark sin GUI:
+
+```bash
+python src/nutritional_app.py --benchmark data/processed/IMC_FILTERED.csv
+```
+
+## Estructura del proyecto
+
+```
+GMRN/
+├── data/
+│   ├── raw/              # Datos originales (Excel de zonas escolares)
+│   ├── processed/        # Datos filtrados y divididos
+│   └── references/       # Tablas OMS (bmi-boys/girls-z-who-2007-exp.xlsx)
+├── src/
+│   ├── process_data.py   # Script de filtrado y división
+│   ├── nutritional_app.py # Generador de PDFs (GUI + batch)
+│   └── logger.py         # Sistema de logs JSON
+├── logs/                 # Logs de ejecución
+└── requirements.txt
+```
+
+## Dependencias principales
+
+- pandas - manejo de datos
+- matplotlib - generación de gráficas
+- openpyxl - lectura/escritura Excel
+- pypdf - combinación de PDFs
+- tkinter - interfaz gráfica (incluido en Python)
+
+## Tecnología
+
+Python 3.12+, matplotlib con backend Agg (no interactivo, más rápido), multiprocessing para paralelizar la generación de PDFs. Los logs se guardan en formato JSON línea por línea.
+
+## Notas sobre la evolución del proyecto
+
+Este código consolidó scripts que originalmente corrían manualmente en Google Colab durante 2 años. La versión inicial solo generaba gráficas individuales usando bucles secuenciales y requería subir archivos manualmente.
+
+Principales mejoras desde la versión Colab:
+
+- Ejecución local sin depender de internet
+- Procesamiento por lotes (miles de registros)
+- Paralelización con multiprocessing
+- Generación de 3 páginas por menor (antes solo 1 gráfica)
+- Interfaz GUI para facilitar uso por personal no técnico
+
+Los datos se procesan offline y los PDFs se pueden imprimir directamente para entregar a padres/tutores.
