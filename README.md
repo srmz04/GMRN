@@ -24,6 +24,44 @@ source .venv/bin/activate  # En Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+## 🤝 Instalación para Colaboradores
+
+Debido a la sensibilidad de los datos (información personal de menores), la carpeta `data/` **NO está incluida en el repositorio**. Si eres un colaborador autorizado:
+
+1.  Solicita el archivo `data.zip` al administrador del proyecto.
+2.  Descomprímelo en la raíz del proyecto para tener esta estructura:
+
+```text
+GMRN/
+├── .venv/
+├── src/
+├── data/              <-- CARPETA EXTERNA
+│   ├── raw/           # Aquí va el Excel maestro "IMC FEDERAL.xlsx"
+│   ├── processed/     # Se generará automáticamente
+│   └── references/    # Tablas OMS (bmi-boys/girls-z-who-2007-exp.xlsx)
+```
+
+### Diccionario de Datos (Estructura Excel)
+
+El archivo de entrada (Raw) debe contener las siguientes columnas para que el sistema funcione:
+
+| Columna | Requerido | Descripción |
+| :--- | :---: | :--- |
+| **NOMBRE_ALU** | ✅ | Nombre completo del menor |
+| **MESES** | ✅ | Edad en meses al momento de la medición |
+| **IMC** | ✅ | Índice de Masa Corporal calculado |
+| **GÉNERO** | ✅ | "M", "MASCULINO", "F" o "FEMENINO" |
+| **PERCENTILES** | ⚠️ | Necesario para script de filtrado (`<15` o `>85.1`) |
+| **ZONA_EF** | ⚠️ | Necesario para dividir archivos por zona |
+| **ESCUELA** | ⚠️ | Necesario para dividir archivos por escuela |
+| **PESO_Kg** | ⚪ | Dato clínico (opcional pero recomendado) |
+| **TALLA_Mts** | ⚪ | Dato clínico (opcional pero recomendado) |
+| **FECHA_NAC** | ⚪ | Fecha de nacimiento |
+| **FECHA_TAM** | ⚪ | Fecha del tamizaje (medición) |
+| **CURP** | ⚪ | Identificador único |
+
+*> ✅ = Obligatorio para generar PDF | ⚠️ = Obligatorio para filtrar/procesar | ⚪ = Opcional (aparece vacío si falta)*
+
 ## Uso básico
 
 ### 1. Procesar datos crudos
