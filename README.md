@@ -4,65 +4,19 @@ Sistema para generar reportes individuales de IMC para menores escolares. Proyec
 
 ## Qué hace
 
-Procesa datos de somatometría de aprox. 63,000 menores (6-12 años) del subsistema federal y genera PDFs individuales de 3 páginas:
+Procesa datos de somatometría de aprox. 63,000 menores (6-12 años) del subsistema federal y genera PDFs individuales de 3 paginas:
 
 1. Gráfica de crecimiento OMS (IMC vs edad)
-
-   ![1768286825489](image/README/1768286825489.png)
 2. Cartilla de salud escolar con datos del alumno
 3. Hoja de referencia para derivación a centros de salud
 
 El sistema permite a profesores de educación física y personal de salud identificar rápidamente casos que requieren seguimiento (desnutrición, sobrepeso, obesidad).
 
-## Instalación
+### ¿Cómo calculamos el percentil?
 
-```bash
-git clone [repo]
-cd GMRN
-python -m venv .venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
+Para saber si un niño está en su peso ideal, no usamos una simple división. Cruzamos su **IMC** real con su **edad exacta en meses** y lo comparamos contra las tablas de crecimiento de la OMS (2007). Estas tablas nos dicen cuál es el "camino" (curva) que debería seguir un niño sano. Si el punto del menor cae muy arriba o muy abajo de esa curva central (predichos), lanzamos la alerta.
 
-## 🤝 Instalación para Colaboradores
-
-Debido a la sensibilidad de los datos (información personal de menores), la carpeta `data/` **NO está incluida en el repositorio**. Si eres un colaborador autorizado:
-
-1.  Solicita el archivo `data.zip` al administrador del proyecto.
-2.  Descomprímelo en la raíz del proyecto para tener esta estructura:
-
-```text
-GMRN/
-├── .venv/
-├── src/
-├── data/              <-- CARPETA EXTERNA
-│   ├── raw/           # Aquí va el Excel maestro "IMC FEDERAL.xlsx"
-│   ├── processed/     # Se generará automáticamente
-│   └── references/    # Tablas OMS (bmi-boys/girls-z-who-2007-exp.xlsx)
-```
-
-### Diccionario de Datos (Estructura Excel)
-
-El archivo de entrada (Raw) debe contener las siguientes columnas para que el sistema funcione:
-
-| Columna | Requerido | Descripción |
-| :--- | :---: | :--- |
-| **NOMBRE_ALU** | ✅ | Nombre completo del menor |
-| **MESES** | ✅ | Edad en meses al momento de la medición |
-| **IMC** | ✅ | Índice de Masa Corporal calculado |
-| **GÉNERO** | ✅ | "M", "MASCULINO", "F" o "FEMENINO" |
-| **PERCENTILES** | ⚠️ | Necesario para script de filtrado (`<15` o `>85.1`) |
-| **ZONA_EF** | ⚠️ | Necesario para dividir archivos por zona |
-| **ESCUELA** | ⚠️ | Necesario para dividir archivos por escuela |
-| **PESO_Kg** | ⚪ | Dato clínico (opcional pero recomendado) |
-| **TALLA_Mts** | ⚪ | Dato clínico (opcional pero recomendado) |
-| **FECHA_NAC** | ⚪ | Fecha de nacimiento |
-| **FECHA_TAM** | ⚪ | Fecha del tamizaje (medición) |
-| **CURP** | ⚪ | Identificador único |
-
-*> ✅ = Obligatorio para generar PDF | ⚠️ = Obligatorio para filtrar/procesar | ⚪ = Opcional (aparece vacío si falta)*
-
-## Uso básico
+## Uso
 
 ### 1. Procesar datos crudos
 
@@ -78,20 +32,43 @@ Esto filtra los registros (percentiles < 15 o > 85.1) y los divide por zona/escu
 python src/nutritional_app.py
 ```
 
-Abre una interfaz gráfica donde puedes:
-
-- Seleccionar archivos individuales o carpetas completas
-  ![1768285722067](image/README/1768285722067.png)
-- Activar/desactivar procesamiento paralelo
-- Ver progreso en tiempo real
-
-  ![1768286438407](image/README/1768286438407.png)
+Abre una interfaz gráfica donde puedes seleccionar archivos individuales o carpetas completas, activar/desactivar procesamiento paralelo y ver el progreso.
 
 Para modo benchmark sin GUI:
 
 ```bash
 python src/nutritional_app.py --benchmark data/processed/IMC_FILTERED.csv
 ```
+
+## Instalacion
+
+```bash
+git clone [repo]
+cd GMRN
+python -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Nota sobre datos:** La carpeta `data/` no está en el repo por contener información sensible de menores. Si necesitas los datos contacta al administrador para obtener el archivo `data.zip` y descomprímelo en la raíz del proyecto.
+
+### Columnas requeridas en el Excel
+
+El archivo de entrada debe tener estas columnas:
+
+**Obligatorias para generar PDFs:**
+- NOMBRE_ALU - nombre del menor
+- MESES - edad en meses
+- IMC - índice de masa corporal
+- GÉNERO - M/MASCULINO o F/FEMENINO
+
+**Necesarias para filtrado:**
+- PERCENTILES - para filtrar casos < 15 o > 85.1
+- ZONA_EF - para dividir por zona
+- ESCUELA - para dividir por escuela
+
+**Opcionales (recomendadas):**
+- PESO_Kg, TALLA_Mts, FECHA_NAC, FECHA_TAM, CURP
 
 ## Estructura del proyecto
 
@@ -117,9 +94,9 @@ GMRN/
 - pypdf - combinación de PDFs
 - tkinter - interfaz gráfica (incluido en Python)
 
-## Tecnología
+## Stack técnico
 
-Python 3.12+, matplotlib con backend Agg (no interactivo, más rápido), multiprocessing para paralelizar la generación de PDFs. Los logs se guardan en formato JSON línea por línea.
+Python 3.12+ con matplotlib (backend Agg para generacion sin GUI), multiprocessing para PDFs en paralelo. Los logs van a formato JSON.
 
 ## Notas sobre la evolución del proyecto
 
