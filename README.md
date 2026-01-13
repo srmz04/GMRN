@@ -1,6 +1,6 @@
 # GMRN - Generador Masivo de Reportes Nutricionales
 
-Sistema para generar reportes individuales de IMC para menores escolares. Proyecto colaborativo entre la Subdirección de Educación Física A (SEED) y el Departamento de Enfermedades Transmisibles (SSD) del estado de Durango.
+Sistema para generar reportes individuales de IMC para menores escolares. Se trata de una herramienta para facilitar la identificación de menores con problemas nutricionales previamente tamizados de manera masiva, esto en el marco de un proyecto colaborativo entre la Subdirección de Educación Física A (SEED) y el Departamento de Enfermedades Transmisibles (SSD) del estado de Durango.
 
 ## Qué hace
 
