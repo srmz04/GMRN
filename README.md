@@ -7,6 +7,8 @@ Sistema para generar reportes individuales de IMC para menores escolares. Proyec
 Procesa datos de somatometría de aprox. 63,000 menores (6-12 años) del subsistema federal y genera PDFs individuales de 3 páginas:
 
 1. Gráfica de crecimiento OMS (IMC vs edad)
+
+   ![1768286825489](image/README/1768286825489.png)
 2. Cartilla de salud escolar con datos del alumno
 3. Hoja de referencia para derivación a centros de salud
 
@@ -41,8 +43,11 @@ python src/nutritional_app.py
 Abre una interfaz gráfica donde puedes:
 
 - Seleccionar archivos individuales o carpetas completas
+  ![1768285722067](image/README/1768285722067.png)
 - Activar/desactivar procesamiento paralelo
 - Ver progreso en tiempo real
+
+  ![1768286438407](image/README/1768286438407.png)
 
 Para modo benchmark sin GUI:
 
