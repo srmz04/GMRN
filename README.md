@@ -12,10 +12,6 @@ Procesa datos de somatometría de aprox. 63,000 menores (6-12 años) del subsist
 
 El sistema permite a profesores de educación física y personal de salud identificar rápidamente casos que requieren seguimiento (desnutrición, sobrepeso, obesidad).
 
-### ¿Cómo calculamos el percentil?
-
-Para saber si un niño está en su peso ideal, no usamos una simple división. Cruzamos su **IMC** real con su **edad exacta en meses** y lo comparamos contra las tablas de crecimiento de la OMS (2007). Estas tablas nos dicen cuál es el "camino" (curva) que debería seguir un niño sano. Si el punto del menor cae muy arriba o muy abajo de esa curva central (predichos), lanzamos la alerta.
-
 ## Uso
 
 ### 1. Procesar datos crudos

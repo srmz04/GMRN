@@ -138,7 +138,7 @@ def gen_referencia_page(menor_data: dict, logo_data=None):
     y_pos -= 3
     draw_field("Clave escolar", cct, 3, y_pos, 20, 45)
     y_pos -= 3
-    draw_field("Zona escolar", zona_ef, 3, y_pos, 18, 40)
+    draw_field("Zona de educación Física", zona_ef, 3, y_pos, 32, 50)
     y_pos -= 3
     draw_field("Grado y grupo", f"{grado} {grupo}", 3, y_pos, 20, 40)
     y_pos -= 6
@@ -405,10 +405,10 @@ def gen_single_page(menor_data: dict, oms_cache_data: dict, z_labels: dict, logo
     grupo = str(menor_data.get('GRUPO', '')).strip()
     cct = str(menor_data.get('CCT', '')).strip()
     zona_ef = str(menor_data.get('ZONA_EF', '')).strip()
-    nombre_prof = str(menor_data.get('NOMBRE_PROF', '')).strip()
+    nombre_prof = "" # Eliminado por solicitud
     escuela = str(menor_data.get('ESCUELA', '')).strip()
     
-    extra_info = f"{grado} {grupo} | CCT: {cct} | Zona EF: {zona_ef} | Prof: {nombre_prof}"
+    extra_info = f"{grado} {grupo} | CCT: {cct} | Zona de educación Física: {zona_ef}"
     if escuela:
         extra_info = f"{escuela} | " + extra_info
     
@@ -473,8 +473,8 @@ class NutritionalAnalyzer:
         self.oms_cache = None
         
         self.z_labels = {
-            "SD3neg": "Desnutricion severa (-3 SD)",
-            "SD2neg": "Desnutricion moderada (-2 SD)",
+            "SD3neg": "Bajo peso severo (-3 SD)",
+            "SD2neg": "Bajo peso (-2 SD)",
             "SD0": "Peso normal (0 SD)",
             "SD2": "Sobrepeso (+2 SD)",
             "SD3": "Obesidad (+3 SD)"
