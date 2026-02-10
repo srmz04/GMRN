@@ -267,7 +267,7 @@ def gen_referencia_page(menor_data: dict, logo_data=None):
     
     y_pos -= 6
     
-    ax.text(3, y_pos, "Recomendaciones y Seguimiento", fontsize=14, fontweight='bold', ha='left', va='center')
+    ax.text(3, y_pos, "Recomendación para el bienestar y desarrollo saludable del alumno", fontsize=12, fontweight='bold', ha='left', va='center')
     y_pos -= 4
     
     import textwrap
