@@ -51,7 +51,106 @@ class OMSCache:
 
 
 
+
+# Global cache for text widths to avoid re-calculating for every PDF
+_text_width_cache = {}
+
+def get_text_width_cached(renderer, ax, text, fontsize):
+    key = (text, fontsize)
+    if key in _text_width_cache:
+        return _text_width_cache[key]
+    
+    t = ax.text(0, 0, text, fontsize=fontsize)
+    # We need to draw to get the extent? Actually get_window_extent with renderer is enough
+    bbox = t.get_window_extent(renderer)
+    width_pixels = bbox.width
+    t.remove()
+    
+    inv = ax.transData.inverted()
+    p0 = inv.transform((0,0))
+    p1 = inv.transform((width_pixels, 0))
+    width_data = p1[0] - p0[0]
+    
+    _text_width_cache[key] = width_data
+    return width_data
+
+def draw_justified_text(ax, text, x_start, y_start, width, fontsize, leading=2.5):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    
+    fig = ax.figure
+    # Ensure we have a renderer. If not, create a temporary canvas
+    if fig.canvas is None:
+        canvas = FigureCanvasAgg(fig)
+    else:
+        canvas = fig.canvas
+        
+    try:
+        renderer = canvas.get_renderer()
+    except:
+        # Fallback if get_renderer fails or not available
+        canvas = FigureCanvasAgg(fig)
+        renderer = canvas.get_renderer()
+    
+    words = text.split()
+    space_width = get_text_width_cached(renderer, ax, " ", fontsize)
+    
+    lines = []
+    current_line = []
+    current_width = 0
+    
+    for word in words:
+        word_width = get_text_width_cached(renderer, ax, word, fontsize)
+        
+        if current_line:
+            if current_width + space_width + word_width <= width:
+                current_line.append((word, word_width))
+                current_width += space_width + word_width
+            else:
+                lines.append(current_line)
+                current_line = [(word, word_width)]
+                current_width = word_width
+        else:
+            current_line.append((word, word_width))
+            current_width = word_width
+            
+    if current_line:
+        lines.append(current_line)
+    
+    y = y_start
+    for i, line in enumerate(lines):
+        is_last_line = (i == len(lines) - 1)
+        
+        x = x_start
+        if is_last_line:
+            # Left align last line
+            for word, ww in line:
+                ax.text(x, y, word, fontsize=fontsize, ha='left', va='center')
+                x += ww + space_width
+        else:
+            # Full justify
+            total_word_width = sum(w for _, w in line)
+            gaps = len(line) - 1
+            if gaps > 0:
+                extra_space = width - total_word_width
+                space_per_gap = extra_space / gaps
+            else:
+                space_per_gap = 0
+                
+            for j, (word, ww) in enumerate(line):
+                ax.text(x, y, word, fontsize=fontsize, ha='left', va='center')
+                if j < gaps:
+                    x += ww + space_per_gap
+                else:
+                    x += ww
+        
+        y -= leading
+    
+    # Return new y position
+    return y
+
+
 def gen_referencia_page(menor_data: dict, logo_data=None):
+
     import io
     from datetime import datetime
     
@@ -106,7 +205,7 @@ def gen_referencia_page(menor_data: dict, logo_data=None):
         ax.axhline(y=y-1, xmin=x_value/100, xmax=line_end/100, color='gray', linewidth=0.3)
     
     y_pos = 84
-    ax.text(3, y_pos, "Informacion del Paciente", fontsize=14, fontweight='bold', ha='left', va='center')
+    ax.text(3, y_pos, "Información del Menor", fontsize=14, fontweight='bold', ha='left', va='center')
     y_pos -= 4
     
     draw_field("Nombre completo del menor", nombre[:40], 3, y_pos, 35, 90)
@@ -179,10 +278,11 @@ def gen_referencia_page(menor_data: dict, logo_data=None):
         "que pudieran afectar su salud a largo plazo."
     )
     
-    lines = textwrap.wrap(mensaje_recomendacion, width=95)
-    for line in lines:
-        ax.text(3, y_pos, line, fontsize=11, ha='left', va='center')
-        y_pos -= 2.5
+    # Using justified text function instead of textwrap
+    # Width approx 95 chars in mono text was used before.
+    # In data coords (0-100), width=90 covers most of the page (left margin 3 + width 90 = 93)
+    y_pos = draw_justified_text(ax, mensaje_recomendacion, x_start=3, y_start=y_pos, width=92, fontsize=11, leading=3)
+
         
     y_pos -= 3
     
@@ -319,9 +419,6 @@ def gen_cartilla_page(menor_data: dict, logo_data=None):
     ax.add_patch(plt.Rectangle((42, y_pos-1.5), 4, 3.5, fill=False, edgecolor='black', linewidth=0.5))
     ax.text(44, y_pos, "NO", fontsize=8, ha='center', va='center')
     y_pos -= line_height
-    
-    ax.text(x_label, y_pos, "Referido a:", fontsize=9, ha='left', va='center')
-    ax.axhline(y=y_pos-1.5, xmin=0.12, xmax=0.45, color='gray', linewidth=0.3)
     
     ax.text(75, 75, "CONSULTAS", fontsize=12, fontweight='bold', ha='center', va='center')
     
@@ -544,6 +641,22 @@ class NutritionalAnalyzer:
                 error_msg = "Columna 'GENERO' requerida"
                 self.log.operation_end("cargar_datos_menores", start, success=False, error=error_msg)
                 return False, error_msg
+
+            # Filter by PERCENTILES if column exists
+            if 'PERCENTILES' in self.df_ninos.columns:
+                original_count = len(self.df_ninos)
+                # Convert to numeric, coercing errors to NaN
+                self.df_ninos['PERCENTILES'] = pd.to_numeric(self.df_ninos['PERCENTILES'], errors='coerce')
+                
+                self.df_ninos = self.df_ninos[
+                    (self.df_ninos['PERCENTILES'] < 15) | 
+                    (self.df_ninos['PERCENTILES'] > 85.1)
+                ]
+                filtered_count = len(self.df_ninos)
+                self.log.info(f"Filtrado por percentiles: {original_count} -> {filtered_count} registros")
+            else:
+                self.log.warning("Columna 'PERCENTILES' no encontrada. No se aplicó filtro.")
+
             
             records = len(self.df_ninos)
             self.log.operation_end("cargar_datos_menores", start, success=True, records=records)
