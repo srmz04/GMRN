@@ -199,16 +199,22 @@ def gen_referencia_page(menor_data: dict, logo_data=None):
     imc = menor_data.get('IMC', 0)
     diagnostico = str(menor_data.get('INTERPRETACIÓN', menor_data.get('INTERPRETACION', ''))).strip()
     
-    def draw_field(label, value, x, y, x_value, line_end=50):
+    def draw_field(label, value, x, y, x_value, line_end=50, max_chars=None):
         ax.text(x, y, f"- {label}:", fontsize=11, ha='left', va='center')
-        ax.text(x_value, y, str(value), fontsize=11, ha='left', va='center', fontweight='bold')
+        value_str = str(value)
+        base_fontsize = 11
+        if max_chars and len(value_str) > max_chars:
+            fontsize = max(7, base_fontsize * max_chars / len(value_str))
+        else:
+            fontsize = base_fontsize
+        ax.text(x_value, y, value_str, fontsize=fontsize, ha='left', va='center', fontweight='bold')
         ax.axhline(y=y-1, xmin=x_value/100, xmax=line_end/100, color='gray', linewidth=0.3)
     
     y_pos = 84
     ax.text(3, y_pos, "Información del Menor", fontsize=14, fontweight='bold', ha='left', va='center')
     y_pos -= 4
     
-    draw_field("Nombre completo del menor", nombre[:40], 3, y_pos, 35, 90)
+    draw_field("Nombre completo del menor", nombre, 3, y_pos, 35, 90, max_chars=40)
     y_pos -= 3
     
     ax.text(3, y_pos, "- Fecha de nacimiento:", fontsize=11, ha='left', va='center')
@@ -370,8 +376,13 @@ def gen_cartilla_page(menor_data: dict, logo_data=None):
     
     def draw_field_left(label, value, y, max_chars=30):
         ax.text(x_label, y, f"{label}:", fontsize=9, ha='left', va='center')
-        display_value = str(value)[:max_chars] if len(str(value)) > max_chars else str(value)
-        ax.text(x_value, y, display_value, fontsize=9, ha='left', va='center', fontweight='bold')
+        display_value = str(value)
+        base_fontsize = 9
+        if len(display_value) > max_chars:
+            fontsize = max(6, base_fontsize * max_chars / len(display_value))
+        else:
+            fontsize = base_fontsize
+        ax.text(x_value, y, display_value, fontsize=fontsize, ha='left', va='center', fontweight='bold')
         ax.axhline(y=y-1.5, xmin=x_value/100, xmax=0.45, color='gray', linewidth=0.3)
     
     draw_field_left("Nombre y apellidos", nombre, y_pos, 25)
